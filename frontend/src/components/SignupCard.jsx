@@ -13,11 +13,11 @@ const SignupCard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post('/signup/', formData);
+      await API.post('/auth/signup/', formData); // Adjust endpoint based on your backend
       setSuccess('Signup successful! Redirecting...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError('Signup failed. Check fields.');
+      setError('Signup failed. Please check your details.');
     }
   };
 
@@ -33,12 +33,15 @@ const SignupCard = () => {
             onChange={handleChange}
             placeholder="Username"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
           />
           <input
             name="email"
+            type="email"
             onChange={handleChange}
             placeholder="Email"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
           />
           <input
             name="password"
@@ -46,6 +49,7 @@ const SignupCard = () => {
             onChange={handleChange}
             placeholder="Password"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-400"
+            required
           />
           <button
             type="submit"

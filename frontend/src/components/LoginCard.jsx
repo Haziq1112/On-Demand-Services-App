@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-
 import API from '../api';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,15 +12,17 @@ const LoginCard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post('/login/', formData);
+      const res = await API.post('/auth/login/', formData); // Adjust endpoint as needed
       localStorage.setItem('access', res.data.access);
       localStorage.setItem('refresh', res.data.refresh);
       localStorage.setItem('role', res.data.role);
 
       if (res.data.role === 'customer') {
         navigate('/user-dashboard');
-      } else {
+      } else if (res.data.role === 'admin') {
         navigate('/admin-dashboard');
+      } else {
+        navigate('/login'); // fallback
       }
     } catch (err) {
       setError('Invalid credentials');
@@ -39,6 +40,7 @@ const LoginCard = () => {
             onChange={handleChange}
             placeholder="Username"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
           />
           <input
             name="password"
@@ -46,6 +48,7 @@ const LoginCard = () => {
             onChange={handleChange}
             placeholder="Password"
             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+            required
           />
           <button
             type="submit"
