@@ -4,7 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Category from './pages/Category';
 import Login from './pages/Login';
-
+import ServiceDetail from './pages/ServiceDetail';
 const App = () => {
   return (
     <Router>
@@ -12,8 +12,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/category/:name" element={<Category />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/admin" element={<div className="p-4">Admin Dashboard</div>} />
-        
         <Route path="/profile" element={<div className="p-4">My Profile Page</div>} />
         <Route path="/bookings" element={<div className="p-4">My Bookings Page</div>} />
         <Route path="/provider" element={<div className="p-4">Switch to Provider Page</div>} />

@@ -43,7 +43,7 @@ const Navbar = () => {
 
   return (
     <nav className="flex justify-between items-center p-4 shadow-md bg-white">
-      <Link to="/" className="text-2xl font-bold text-purple-600">Logoipsum</Link>
+      <Link to="/" className="text-2xl font-bold text-purple-600">On-Demand Services</Link>
 
       <ul className="flex space-x-6 text-gray-700 font-medium">
         <li><Link to="/">Home</Link></li>
