@@ -1,0 +1,25 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Home from './pages/Home';
+import Category from './pages/Category';
+import Login from './pages/Login';
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/category/:name" element={<Category />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/admin" element={<div className="p-4">Admin Dashboard</div>} />
+        
+        <Route path="/profile" element={<div className="p-4">My Profile Page</div>} />
+        <Route path="/bookings" element={<div className="p-4">My Bookings Page</div>} />
+        <Route path="/provider" element={<div className="p-4">Switch to Provider Page</div>} />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
