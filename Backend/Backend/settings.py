@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ed4n60e^o)pi2q=q6yo#n$j&_+e(%5-oam$yz$#qh-^3g7%1ym'
+SECRET_KEY = 'django-insecure-#5ac6flhl(nhp)+m#1kpa%)i5dus2tae+5=mgt-@&xou1h@s^-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,15 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'authsystem',
-    "corsheaders",
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'services',
-    'bookings',
-    'feedback',
-    'contact',
-
 ]
 
 MIDDLEWARE = [
@@ -55,18 +46,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware', 
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-REST_FRAMEWORK = {
-   
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
-    
-}
 
 ROOT_URLCONF = 'Backend.urls'
 
@@ -139,23 +120,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-AUTH_USER_MODEL = 'authsystem.CustomUser'
-
-CORS_ALLOW_ALL_ORIGINS = True
-
-
-import os
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'haziqahmad80000@gmail.com'       # your email here
-EMAIL_HOST_PASSWORD = 'ha21468844'      # your app password here
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-CONTACT_RECEIVER_EMAIL = 'haziqahmad8000@gmail.com'  # your receiving email here
