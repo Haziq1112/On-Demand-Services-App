@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'au',
+    'services',
     'rest_framework',
     "corsheaders",
 ]
@@ -150,3 +151,4 @@ cred = credentials.Certificate(firebase_key_path)
 initialize_app(cred)
 
 CORS_ALLOW_ALL_ORIGINS = True
+
