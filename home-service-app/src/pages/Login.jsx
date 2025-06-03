@@ -25,6 +25,30 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // 🔐 Get Firebase ID token
+  async function getFirebaseIdToken(user) {
+    return await user.getIdToken();
+  }
+
+  // 🔄 Send token to Django backend
+  const verifyTokenWithBackend = async (idToken) => {
+    try {
+      const res = await fetch('http://localhost:8000/api/verify-firebase-token/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ firebase_token: idToken }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Token verification failed');
+      console.log('✅ Backend verified user:', data);
+    } catch (error) {
+      console.error('❌ Token verification failed:', error.message);
+    }
+  };
+
   const redirectBasedOnRole = (role) => {
     if (role === 'admin') navigate('/admin');
     else navigate('/');
@@ -36,6 +60,12 @@ const Login = () => {
       const res = await signInWithPopup(auth, provider);
       const userRef = doc(db, 'users', res.user.uid);
       const userSnap = await getDoc(userRef);
+
+      const idToken = await getFirebaseIdToken(res.user);
+      localStorage.setItem('firebaseIdToken', idToken);
+
+      // ✅ Send token to backend
+      await verifyTokenWithBackend(idToken);
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
@@ -59,6 +89,13 @@ const Login = () => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      const idToken = await getFirebaseIdToken(userCredential.user);
+      localStorage.setItem('firebaseIdToken', idToken);
+
+      // ✅ Send token to backend
+      await verifyTokenWithBackend(idToken);
+
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         email,
         username,
@@ -85,11 +122,19 @@ const Login = () => {
           emailToUse = snap.docs[0].data().email;
         } else {
           alert('Username not found');
+          setLoading(false);
           return;
         }
       }
 
       const userCredential = await signInWithEmailAndPassword(auth, emailToUse, password);
+
+      const idToken = await getFirebaseIdToken(userCredential.user);
+      localStorage.setItem('firebaseIdToken', idToken);
+
+      // ✅ Send token to backend
+      await verifyTokenWithBackend(idToken);
+
       const docSnap = await getDoc(doc(db, 'users', userCredential.user.uid));
       const role = docSnap.data()?.role || 'customer';
       redirectBasedOnRole(role);

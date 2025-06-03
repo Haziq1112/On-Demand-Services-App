@@ -37,7 +37,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'au',
+    'rest_framework',
+    "corsheaders",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'au.authentication.FirebaseAuthentication',
+    ),
+}
+
+AUTH_USER_MODEL = 'au.CustomUser'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -47,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = 'Backend.urls'
@@ -135,3 +149,4 @@ firebase_key_path = os.path.join(BASE_DIR, 'credentials', 'firebase-adminsdk.jso
 cred = credentials.Certificate(firebase_key_path)
 initialize_app(cred)
 
+CORS_ALLOW_ALL_ORIGINS = True
