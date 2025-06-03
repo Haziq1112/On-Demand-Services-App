@@ -124,12 +124,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 import os
-import json
 from firebase_admin import credentials, initialize_app
 
-# Get absolute path to the credentials file
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-cred_path = os.path.join(BASE_DIR, 'credentials', 'firebase-service-account.json')
 
-cred = credentials.Certificate(cred_path)
+# Path to your Firebase JSON key file
+firebase_key_path = os.path.join(BASE_DIR, 'credentials', 'firebase-adminsdk.json')
+
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate(firebase_key_path)
 initialize_app(cred)
+
