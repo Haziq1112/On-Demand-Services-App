@@ -1,9 +1,12 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.exceptions import NotFound, ValidationError
 from .models import ServiceProvider, Service
 from .serializers import ServiceProviderSerializer, ServiceSerializer
 from au.authentication import FirebaseAuthentication
-from rest_framework.exceptions import NotFound
-from rest_framework.exceptions import ValidationError
+
+
 class CreateProviderProfileView(generics.CreateAPIView):
     serializer_class = ServiceProviderSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -26,14 +29,26 @@ class UpdateProviderProfileView(generics.UpdateAPIView):
         except ServiceProvider.DoesNotExist:
             raise NotFound("Service provider profile does not exist.")
 
+
 class CreateServiceView(generics.CreateAPIView):
     serializer_class = ServiceSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [FirebaseAuthentication]
 
-    def perform_create(self, serializer):
+    def post(self, request, *args, **kwargs):
+        # Extract images correctly from FormData
+        gallery_images = request.FILES.getlist('gallery')
+        data = request.data.copy()
+        data.setlist('gallery', gallery_images)
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
         provider = ServiceProvider.objects.get(user=self.request.user)
         serializer.save(provider=provider)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class UpdateServiceView(generics.RetrieveUpdateAPIView):
     serializer_class = ServiceSerializer
@@ -43,8 +58,7 @@ class UpdateServiceView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         provider = ServiceProvider.objects.get(user=self.request.user)
         return Service.objects.filter(provider=provider)
-from rest_framework.response import Response
-from rest_framework.views import APIView
+
 
 class RetrieveProviderProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -56,4 +70,36 @@ class RetrieveProviderProfileView(APIView):
             serializer = ServiceProviderSerializer(profile)
             return Response(serializer.data)
         except ServiceProvider.DoesNotExist:
-            return Response({}, status=200)  
+            return Response({}, status=status.HTTP_200_OK)
+
+
+class ListProviderServicesView(generics.ListAPIView):
+    serializer_class = ServiceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [FirebaseAuthentication]
+
+    def get_queryset(self):
+        provider = ServiceProvider.objects.get(user=self.request.user)
+        return Service.objects.filter(provider=provider)
+
+from rest_framework import generics, permissions
+from .models import Service, ServiceProvider
+from .serializers import ServiceSerializer
+from au.authentication import FirebaseAuthentication
+from rest_framework.exceptions import NotFound
+
+class RetrieveServiceView(generics.RetrieveAPIView):
+    serializer_class = ServiceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [FirebaseAuthentication]
+
+    def get_queryset(self):
+        provider = ServiceProvider.objects.get(user=self.request.user)
+        return Service.objects.filter(provider=provider)
+
+    def get_object(self):
+        try:
+            service = self.get_queryset().get(pk=self.kwargs['pk'])
+            return service
+        except Service.DoesNotExist:
+            raise NotFound("Service not found.")

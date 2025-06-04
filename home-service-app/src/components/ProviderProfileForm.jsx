@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import getCroppedImg from '../utils/cropImage';
 import { FaCamera } from 'react-icons/fa';
 
 const ProviderProfileForm = ({ onClose }) => {

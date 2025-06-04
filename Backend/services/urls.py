@@ -5,6 +5,8 @@ from .views import (
     CreateServiceView,
     UpdateServiceView,
     RetrieveProviderProfileView,
+    ListProviderServicesView,
+    RetrieveServiceView,
 )
 
 urlpatterns = [
@@ -13,4 +15,6 @@ urlpatterns = [
     path('add-service/', CreateServiceView.as_view(), name='add-service'),
     path('update-service/<int:pk>/', UpdateServiceView.as_view(), name='update-service'),
     path('profile/', RetrieveProviderProfileView.as_view(), name='get-provider-profile'),
+    path('provider/services/', ListProviderServicesView.as_view(), name='list-provider-services'),
+    path('services/<int:pk>/', RetrieveServiceView.as_view(), name='retrieve-service'),
 ]

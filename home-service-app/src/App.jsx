@@ -7,6 +7,8 @@ import Category from './pages/Category';
 import Login from './pages/Login';
 import ServiceDetail from './pages/ServiceDetail';
 import ProviderDashboard from './pages/ProviderDashboard';
+import AddServicePage from './pages/AddServicePage';
+import ServiceFormWrapper from './components/ServiceFormWrapper';
 const App = () => {
   return (
     <Router>
@@ -19,6 +21,9 @@ const App = () => {
         <Route path="/profile" element={<div className="p-4">My Profile Page</div>} />
         <Route path="/bookings" element={<div className="p-4">My Bookings Page</div>} />
         <Route path="/provider" element={<ProviderDashboard />} />
+        <Route path="/provider/services" element={<ProviderDashboard />} />
+        <Route path="/provider/services/add" element={<AddServicePage />} />
+         <Route path="/provider/services/:serviceId/edit" element={<ServiceFormWrapper />} />
       </Routes>
     </Router>
   );

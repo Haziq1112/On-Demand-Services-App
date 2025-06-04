@@ -1,67 +1,97 @@
-import React, { useState } from 'react';
+// src/pages/ProviderDashboard.jsx
+import React, { useState, useEffect } from 'react';
 import ProviderNavbar from '../components/ProviderNavbar';
-// import ServiceForm from '../components/ServiceForm';
-import { services, businesses } from '../data';
 import CategoryCard from '../components/CategoryCard';
-import ServiceCard from '../components/ServiceCard';
+import ProviderServiceCard from '../components/ProviderServiceCard';
+import AddNewServiceCard from '../components/AddNewServiceCard';
+import { services as dummyCategories } from '../data';
 
 const ProviderDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [providerServices, setProviderServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const uniqueLocations = [...new Set(businesses.map(b => b.location))];
+  const fetchServices = async () => {
+    try {
+      const token = localStorage.getItem('firebaseIdToken');
+      const response = await fetch('http://127.0.0.1:8000/api/provider/services/', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  const filteredBusinesses = businesses.filter(
-    (b) =>
-      (b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.category.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (locationFilter === '' || b.location === locationFilter)
-  );
+      if (!response.ok) {
+        throw new Error('Failed to fetch provider services');
+      }
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setLocationFilter('');
+      const data = await response.json();
+      setProviderServices(data);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const filteredServices = providerServices.filter(
+    (service) =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (locationFilter === '' || service.location === locationFilter)
+  );
 
   return (
     <div>
       <ProviderNavbar />
+
       <div className="text-center mt-10">
         <h1 className="text-4xl font-bold">
           Manage Your <span className="text-purple-600">Services & Bookings</span>
         </h1>
-        <p className="mt-4 text-gray-600">Keep your business updated and discover new clients</p>
+        <p className="mt-4 text-gray-600">
+          Keep your business updated and discover new clients
+        </p>
 
         {/* Search Bar */}
         <div className="flex justify-center mt-6">
           <input
             type="text"
             placeholder="Search your services"
-            className="w-1/2 p-2 border rounded-l-md"
+            className="w-1/2 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-purple-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="bg-purple-600 text-white px-4 py-2 rounded-r-md">🔍</button>
+          <button className="bg-purple-600 text-white px-4 py-2 rounded-r-md hover:bg-purple-700 transition">
+            🔍
+          </button>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-4 mt-10">
-        {/* Categories */}
+        {/* Categories Section */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-          {services.map((service, i) => (
-            <CategoryCard key={i} category={service} />
+          {dummyCategories.map((category, i) => (
+            <CategoryCard key={i} category={category} />
           ))}
         </div>
 
-        {/* Filtered Business List */}
+        {/* Services Section */}
         <h2 className="text-2xl font-bold mt-10 mb-4">Your Listed Services</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredBusinesses.length > 0 ? (
-            filteredBusinesses.map((b, i) => <ServiceCard key={i} service={b} />)
-          ) : (
-            <p className="text-gray-600 col-span-3 text-center">No services found.</p>
-          )}
-        </div>
+
+        {loading ? (
+          <p className="text-center text-gray-500">Loading your services...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {filteredServices.map((service) => (
+              <ProviderServiceCard key={service.id} service={service} />
+            ))}
+            <AddNewServiceCard />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -43,13 +43,12 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
 
 class ServiceSerializer(serializers.ModelSerializer):
     gallery_images = ServiceImageSerializer(many=True, read_only=True)
-    gallery = serializers.ListField(
-        child=serializers.ImageField(), write_only=True, required=False
-    )
+    gallery = serializers.ListField(write_only=True, required=False)
+
 
     class Meta:
         model = Service
-        fields = ['id', 'provider', 'name', 'description', 'price', 'duration_minutes', 'thumbnail', 'gallery_images', 'gallery']
+        fields = ['id', 'name', 'description', 'price', 'duration_minutes', 'thumbnail', 'gallery_images', 'gallery']
 
     def create(self, validated_data):
         gallery_data = validated_data.pop('gallery', [])
