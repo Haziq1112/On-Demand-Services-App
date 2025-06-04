@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Transition } from '@headlessui/react';
-import { EllipsisVerticalIcon } from '@heroicons/react/24/solid';
+import { UserCircleIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
 import ProviderProfileForm from './ProviderProfileForm';
 import { ToastContainer, toast } from 'react-toastify';
@@ -11,19 +11,25 @@ const ProviderNavbar = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  const fetchImage = async () => {
-    try {
-      const token = localStorage.getItem('firebaseIdToken');
-      const res = await axios.get('/api/provider/profile/', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.data?.profile_image) {
-        setProfileImage(res.data.profile_image);
-      }
-    } catch (err) {
-      toast.error('Failed to load profile image');
+ const fetchImage = async () => {
+  try {
+    const token = localStorage.getItem('firebaseIdToken');
+    const res = await axios.get('http://127.0.0.1:8000/api/profile/', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const imagePath = res.data?.profile_picture;
+    if (imagePath) {
+      const fullUrl = imagePath.startsWith('http')
+        ? imagePath
+        : `http://127.0.0.1:8000${imagePath}`;
+      setProfileImage(fullUrl);
     }
-  };
+  } catch (err) {
+    toast.error('Failed to load profile image');
+    console.error('Image fetch error:', err);
+  }
+};
 
   useEffect(() => {
     fetchImage();
@@ -52,7 +58,7 @@ const ProviderNavbar = () => {
                   className="w-8 h-8 rounded-full object-cover ring ring-purple-500"
                 />
               ) : (
-                <EllipsisVerticalIcon className="w-6 h-6 text-gray-600" />
+                <UserCircleIcon className="w-8 h-8 text-gray-600" />
               )}
             </Menu.Button>
             <Transition

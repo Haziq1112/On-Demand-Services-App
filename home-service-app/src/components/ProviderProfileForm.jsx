@@ -32,7 +32,7 @@ const ProviderProfileForm = ({ onClose }) => {
           setEmail(res.data.email || '');
           setPhone(res.data.phone || '');
           if (res.data.profile_picture) {
-            setProfileImage(res.data.profile_picture);
+            setProfileImage(`http://127.0.0.1:8000${res.data.profile_picture}`);;
           }
         }
       } catch (err) {
