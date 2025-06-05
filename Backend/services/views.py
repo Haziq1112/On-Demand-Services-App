@@ -5,6 +5,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 from .models import ServiceProvider, Service
 from .serializers import ServiceProviderSerializer, ServiceSerializer
 from rest_framework.generics import DestroyAPIView
+from .models import ServiceImage
 from rest_framework.generics import ListAPIView
 from rest_framework.exceptions import NotFound
 from au.authentication import FirebaseAuthentication
