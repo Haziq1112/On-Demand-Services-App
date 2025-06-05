@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ALLOWED_SERVICES = ['Cleaning', 'Repair', 'Painting', 'Shifting', 'Plumbing', 'Electric'];
 
 const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: '',
     description: '',
     price: '',
     duration_minutes: '',
     thumbnail: null,
-    gallery: []
+    gallery: [],
   });
+
+  const [existingThumbnail, setExistingThumbnail] = useState(null);
+  const [existingGallery, setExistingGallery] = useState([]);
 
   useEffect(() => {
     if (editingService) {
@@ -24,6 +32,9 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
         thumbnail: null,
         gallery: [],
       });
+
+      setExistingThumbnail(editingService.thumbnail || null);
+      setExistingGallery(editingService.gallery_images || []);
     }
   }, [editingService]);
 
@@ -34,81 +45,113 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
 
   const handleThumbnailChange = (e) => {
     setForm((prev) => ({ ...prev, thumbnail: e.target.files[0] }));
+    setExistingThumbnail(null);
   };
 
   const handleGalleryChange = (e) => {
-    setForm((prev) => ({ ...prev, gallery: Array.from(e.target.files) }));
+    const newFiles = Array.from(e.target.files);
+    setForm((prev) => ({
+      ...prev,
+      gallery: [...prev.gallery, ...newFiles],
+    }));
+  };
+
+  const handleDelete = async () => {
+    if (!editingService) return;
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this service?');
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem('firebaseIdToken');
+      await axios.delete(`http://127.0.0.1:8000/api/delete-service/${editingService.id}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success('Service deleted successfully!');
+      resetForm();
+      setEditingService(null);
+      onSuccess();
+    } catch (err) {
+      console.error('Delete error:', err.response?.data || err.message);
+      toast.error('Failed to delete service.');
+    }
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const token = localStorage.getItem('firebaseIdToken');
-  const formData = new FormData();
+    const token = localStorage.getItem('firebaseIdToken');
+    const formData = new FormData();
 
-  formData.append('name', form.name);
-  formData.append('description', form.description);
-  formData.append('price', form.price);
-  formData.append('duration_minutes', form.duration_minutes);
+    formData.append('name', form.name);
+    formData.append('description', form.description);
+    formData.append('price', form.price);
+    formData.append('duration_minutes', form.duration_minutes);
 
-  if (form.thumbnail) {
-    formData.append('thumbnail', form.thumbnail);
-  }
+    if (form.thumbnail) {
+      formData.append('thumbnail', form.thumbnail);
+    }
 
-  form.gallery.forEach((file) => {
-    formData.append('gallery', file);
-  });
-
-  try {
-    const url = editingService
-      ? `http://127.0.0.1:8000/api/update-service/${editingService.id}/`
-      : 'http://127.0.0.1:8000/api/add-service/';
-
-    const method = editingService ? 'put' : 'post';
-
-    await axios({
-      method,
-      url,
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
+    form.gallery.forEach((file) => {
+      formData.append('gallery', file);
     });
 
-    toast.success(editingService ? 'Service updated!' : 'Service created!');
+    try {
+      const url = editingService
+        ? `http://127.0.0.1:8000/api/update-service/${editingService.id}/`
+        : 'http://127.0.0.1:8000/api/add-service/';
+      const method = editingService ? 'put' : 'post';
+
+      await axios({
+        method,
+        url,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      toast.success(editingService ? 'Service updated!' : 'Service created!');
+      resetForm();
+      setEditingService(null);
+      onSuccess();
+    } catch (err) {
+      console.error('Error:', err.response?.data || err.message);
+      toast.error('Error saving service.');
+    }
+  };
+
+  const resetForm = () => {
     setForm({
       name: '',
       description: '',
       price: '',
       duration_minutes: '',
       thumbnail: null,
-      gallery: []
+      gallery: [],
     });
-    setEditingService(null);
-    onSuccess();
-  } catch (err) {
-    if (err.response) {
-      console.error('Server error response:', err.response.data);
-      toast.error(`Error: ${JSON.stringify(err.response.data)}`);
-    } else if (err.request) {
-      console.error('No response received:', err.request);
-      toast.error('No response from server.');
-    } else {
-      console.error('Error setting up request:', err.message);
-      toast.error(`Error: ${err.message}`);
-    }
-  }
-};
-
+    setExistingThumbnail(null);
+    setExistingGallery([]);
+  };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-lg shadow-md border border-gray-200 space-y-4"
+      className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 space-y-6 max-w-3xl mx-auto mt-8 transition-all duration-300 animate-fade-in"
     >
       <ToastContainer />
-      <h2 className="text-xl font-bold mb-4">
+
+      <button
+        type="button"
+        onClick={() => navigate('/provider')}
+        className="flex items-center gap-2 text-purple-600 hover:text-purple-800 font-medium transition"
+      >
+        <FaArrowLeft /> 
+      </button>
+
+      <h2 className="text-2xl font-semibold text-purple-700 tracking-wide">
         {editingService ? 'Edit Service' : 'Add New Service'}
       </h2>
 
@@ -118,7 +161,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
           name="name"
           value={form.name}
           onChange={handleChange}
-          className="w-full mt-1 p-2 border rounded-md"
+          className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           required
         >
           <option value="">Select a service</option>
@@ -136,32 +179,32 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
           name="description"
           value={form.description}
           onChange={handleChange}
-          className="w-full mt-1 p-2 border rounded-md"
+          className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           rows="4"
           required
         />
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <label className="block font-medium">Price ($)</label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block font-medium">Price (Rs.)</label>
           <input
             type="number"
             name="price"
             value={form.price}
             onChange={handleChange}
-            className="w-full mt-1 p-2 border rounded-md"
+            className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
           />
         </div>
-        <div className="flex-1">
+        <div>
           <label className="block font-medium">Duration (minutes)</label>
           <input
             type="number"
             name="duration_minutes"
             value={form.duration_minutes}
             onChange={handleChange}
-            className="w-full mt-1 p-2 border rounded-md"
+            className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
           />
         </div>
@@ -169,20 +212,68 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
 
       <div>
         <label className="block font-medium">Thumbnail</label>
-        <input type="file" accept="image/*" onChange={handleThumbnailChange} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleThumbnailChange}
+          className="mt-1"
+        />
+        {existingThumbnail && (
+          <img
+            src={existingThumbnail}
+            alt="Current thumbnail"
+            className="mt-3 w-32 h-32 object-cover rounded shadow"
+          />
+        )}
       </div>
 
       <div>
         <label className="block font-medium">Gallery Images</label>
-        <input type="file" accept="image/*" multiple onChange={handleGalleryChange} />
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleGalleryChange}
+          className="mt-1"
+        />
+        <div className="mt-3 flex flex-wrap gap-3">
+          {existingGallery.map((img) => (
+            <img
+              key={img.id}
+              src={img.image}
+              alt="Gallery"
+              className="w-24 h-24 object-cover rounded shadow"
+            />
+          ))}
+          {form.gallery.map((file, idx) => (
+            <img
+              key={`new-${idx}`}
+              src={URL.createObjectURL(file)}
+              alt="New upload"
+              className="w-24 h-24 object-cover rounded border-2 border-dashed border-purple-300 shadow"
+            />
+          ))}
+        </div>
       </div>
 
-      <button
-        type="submit"
-        className="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition"
-      >
-        {editingService ? 'Update Service' : 'Add Service'}
-      </button>
+      <div className="flex gap-4">
+        <button
+          type="submit"
+          className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200 shadow"
+        >
+          {editingService ? 'Update Service' : 'Add Service'}
+        </button>
+
+        {editingService && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-200 shadow"
+          >
+            Delete Service
+          </button>
+        )}
+      </div>
     </form>
   );
 };

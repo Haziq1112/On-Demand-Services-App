@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.exceptions import NotFound, ValidationError
 from .models import ServiceProvider, Service
 from .serializers import ServiceProviderSerializer, ServiceSerializer
+from rest_framework.generics import DestroyAPIView
 from au.authentication import FirebaseAuthentication
 
 
@@ -103,3 +104,8 @@ class RetrieveServiceView(generics.RetrieveAPIView):
             return service
         except Service.DoesNotExist:
             raise NotFound("Service not found.")
+
+class DeleteServiceView(DestroyAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    lookup_field = 'id'

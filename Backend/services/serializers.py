@@ -44,6 +44,7 @@ class ServiceProviderSerializer(serializers.ModelSerializer):
 class ServiceSerializer(serializers.ModelSerializer):
     gallery_images = ServiceImageSerializer(many=True, read_only=True)
     gallery = serializers.ListField(write_only=True, required=False)
+    thumbnail = serializers.ImageField(required=False, allow_null=True)
 
 
     class Meta:
