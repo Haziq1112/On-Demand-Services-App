@@ -20,7 +20,8 @@ class ServiceProvider(models.Model):
 
 class Service(models.Model):
     provider = models.ForeignKey(ServiceProvider, on_delete=models.CASCADE, related_name='services')
-    name = models.CharField(max_length=50, choices=[(s, s) for s in ALLOWED_SERVICES])
+    name = models.CharField(max_length=100)  # The name of the service (free text)
+    category = models.CharField(max_length=50, choices=[(s, s) for s in ALLOWED_SERVICES] , default='Cleaning')  # From allowed types
     description = models.TextField()
     price = models.DecimalField(max_digits=8, decimal_places=2)
     duration_minutes = models.IntegerField()
@@ -28,7 +29,7 @@ class Service(models.Model):
     gallery_images = models.ManyToManyField('ServiceImage')
 
     def __str__(self):
-        return f"{self.name} by {self.provider.full_name}"
+        return f"{self.name} ({self.category}) by {self.provider.full_name}"
 
 
 class ServiceImage(models.Model):

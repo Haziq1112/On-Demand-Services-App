@@ -8,6 +8,8 @@ from .views import (
     ListProviderServicesView,
     RetrieveServiceView,
     DeleteServiceView,
+    ListAllServicesView,
+    PublicRetrieveServiceView,
 )
 
 urlpatterns = [
@@ -17,6 +19,8 @@ urlpatterns = [
     path('update-service/<int:pk>/', UpdateServiceView.as_view(), name='update-service'),
     path('profile/', RetrieveProviderProfileView.as_view(), name='get-provider-profile'),
     path('provider/services/', ListProviderServicesView.as_view(), name='list-provider-services'),
-    path('services/<int:pk>/', RetrieveServiceView.as_view(), name='retrieve-service'),
+    path('provider/services/<int:pk>/', RetrieveServiceView.as_view(), name='retrieve-service'),
+    path('services/<int:pk>/', PublicRetrieveServiceView.as_view(), name='public-retrieve-service'),
     path('delete-service/<int:id>/', DeleteServiceView.as_view(), name='delete-service'),
+    path('services/', ListAllServicesView.as_view(), name='list-all-services'),
 ]

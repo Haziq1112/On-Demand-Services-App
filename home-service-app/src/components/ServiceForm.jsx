@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ALLOWED_SERVICES = ['Cleaning', 'Repair', 'Painting', 'Shifting', 'Plumbing', 'Electric'];
 
-const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
+const ServiceForm = ({ editingService = null, onSuccess = () => {}, setEditingService = () => {},}) => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -17,6 +17,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
     duration_minutes: '',
     thumbnail: null,
     gallery: [],
+    category: '',
   });
 
   const [existingThumbnail, setExistingThumbnail] = useState(null);
@@ -31,6 +32,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
         duration_minutes: editingService.duration_minutes,
         thumbnail: null,
         gallery: [],
+        category: editingService.category || '',
       });
 
       setExistingThumbnail(editingService.thumbnail || null);
@@ -70,7 +72,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
 
       toast.success('Service deleted successfully!');
       resetForm();
-      setEditingService(null);
+      setEditingService?.(null);
       onSuccess();
     } catch (err) {
       console.error('Delete error:', err.response?.data || err.message);
@@ -88,6 +90,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
     formData.append('description', form.description);
     formData.append('price', form.price);
     formData.append('duration_minutes', form.duration_minutes);
+    formData.append('category', form.category); // ✅ Append category
 
     if (form.thumbnail) {
       formData.append('thumbnail', form.thumbnail);
@@ -115,7 +118,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
 
       toast.success(editingService ? 'Service updated!' : 'Service created!');
       resetForm();
-      setEditingService(null);
+      setEditingService?.(null);
       onSuccess();
     } catch (err) {
       console.error('Error:', err.response?.data || err.message);
@@ -131,6 +134,7 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
       duration_minutes: '',
       thumbnail: null,
       gallery: [],
+      category: '',
     });
     setExistingThumbnail(null);
     setExistingGallery([]);
@@ -148,26 +152,40 @@ const ServiceForm = ({ editingService, onSuccess, setEditingService }) => {
         onClick={() => navigate('/provider')}
         className="flex items-center gap-2 text-purple-600 hover:text-purple-800 font-medium transition"
       >
-        <FaArrowLeft /> 
+        <FaArrowLeft />
       </button>
 
       <h2 className="text-2xl font-semibold text-purple-700 tracking-wide">
         {editingService ? 'Edit Service' : 'Add New Service'}
       </h2>
 
+ <div>
+  <label className="block font-medium">Service Name</label>
+  <input
+    type="text"
+    name="name"
+    value={form.name}
+    onChange={handleChange}
+    placeholder="Enter service name"
+    className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
+    required
+  />
+</div>
+
+
       <div>
-        <label className="block font-medium">Service Name</label>
+        <label className="block font-medium">Category</label>
         <select
-          name="name"
-          value={form.name}
+          name="category"
+          value={form.category}
           onChange={handleChange}
           className="w-full mt-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400"
           required
         >
-          <option value="">Select a service</option>
-          {ALLOWED_SERVICES.map((service, i) => (
-            <option key={i} value={service}>
-              {service}
+          <option value="">Select a category</option>
+          {ALLOWED_SERVICES.map((category, i) => (
+            <option key={i} value={category}>
+              {category}
             </option>
           ))}
         </select>

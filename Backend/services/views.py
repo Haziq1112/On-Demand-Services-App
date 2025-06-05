@@ -5,6 +5,8 @@ from rest_framework.exceptions import NotFound, ValidationError
 from .models import ServiceProvider, Service
 from .serializers import ServiceProviderSerializer, ServiceSerializer
 from rest_framework.generics import DestroyAPIView
+from rest_framework.generics import ListAPIView
+from rest_framework.exceptions import NotFound
 from au.authentication import FirebaseAuthentication
 
 
@@ -37,18 +39,20 @@ class CreateServiceView(generics.CreateAPIView):
     authentication_classes = [FirebaseAuthentication]
 
     def post(self, request, *args, **kwargs):
-        # Extract images correctly from FormData
-        gallery_images = request.FILES.getlist('gallery')
+        gallery_files = request.FILES.getlist('gallery')
         data = request.data.copy()
-        data.setlist('gallery', gallery_images)
-
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        provider = ServiceProvider.objects.get(user=self.request.user)
-        serializer.save(provider=provider)
+        provider = ServiceProvider.objects.get(user=request.user)
+        service = serializer.save(provider=provider)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        for file in gallery_files:
+            image = ServiceImage.objects.create(image=file)
+            service.gallery_images.add(image)
+
+        return Response(self.get_serializer(service).data, status=status.HTTP_201_CREATED)
+
 
 
 class UpdateServiceView(generics.RetrieveUpdateAPIView):
@@ -83,11 +87,7 @@ class ListProviderServicesView(generics.ListAPIView):
         provider = ServiceProvider.objects.get(user=self.request.user)
         return Service.objects.filter(provider=provider)
 
-from rest_framework import generics, permissions
-from .models import Service, ServiceProvider
-from .serializers import ServiceSerializer
-from au.authentication import FirebaseAuthentication
-from rest_framework.exceptions import NotFound
+
 
 class RetrieveServiceView(generics.RetrieveAPIView):
     serializer_class = ServiceSerializer
@@ -109,3 +109,26 @@ class DeleteServiceView(DestroyAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
     lookup_field = 'id'
+
+class ListAllServicesView(ListAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    permission_classes = []
+    authentication_classes = []
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request  
+        return context
+
+
+class PublicRetrieveServiceView(generics.RetrieveAPIView):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request  
+        return context
