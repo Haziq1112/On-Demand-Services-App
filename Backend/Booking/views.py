@@ -1,34 +1,82 @@
-# views.py
-from rest_framework import generics, permissions
-from .models import Booking
-from .serializers import BookingSerializer
-
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from .models import Booking, Feedback
+from .serializers import BookingSerializer
+from Booking.utils import evaluate_provider_ban
+from rest_framework.exceptions import ValidationError
 
 class CreateBookingView(generics.CreateAPIView):
     serializer_class = BookingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         print("Incoming booking data:", request.data)
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            print("Validation errors:", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except ValidationError as e:
+            print("Validation error:", e.detail)
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            print("Unexpected error in booking create:", str(e))
+            traceback.print_exc()
+            return Response({'detail': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def perform_create(self, serializer):
-        # Attach the current authenticated user to the booking
         serializer.save(user=self.request.user)
-
-
 
 class UserBookingsListView(generics.ListAPIView):
     serializer_class = BookingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Booking.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+class SubmitFeedbackView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found.'}, status=404)
+
+        if booking.status != 'booked':
+            return Response({'error': 'Only booked services can be reviewed.'}, status=400)
+
+        try:
+            rating = int(request.data.get('rating'))
+            comment = request.data.get('comment')
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid rating or comment.'}, status=400)
+
+        Feedback.objects.create(booking=booking, rating=rating, comment=comment)
+        booking.status = 'completed'
+        booking.save()
+
+        provider = booking.service.provider
+        evaluate_provider_ban(provider)
+
+        return Response({'message': 'Feedback submitted and booking marked as completed.'}, status=201)
+
+
+class CancelBookingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, booking_id):
+        try:
+            booking = Booking.objects.get(id=booking_id, user=request.user)
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found.'}, status=404)
+
+        booking.status = 'cancelled'
+        booking.save()
+        # Optionally: store `reason` separately if needed
+        return Response({'message': 'Booking cancelled successfully.'}, status=200)

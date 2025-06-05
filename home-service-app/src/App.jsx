@@ -10,6 +10,7 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import AddServicePage from './pages/AddServicePage';
 import ServiceFormWrapper from './components/ServiceFormWrapper';
 import ProviderServiceFormPage from './pages/ProviderServiceFormPage';
+import MyBookings from './pages/MyBookings';
 const App = () => {
   return (
     <Router>
@@ -20,7 +21,7 @@ const App = () => {
         <Route path="/services/:id" element={<ServiceDetail />} />
         <Route path="/admin" element={<div className="p-4">Admin Dashboard</div>} />
         <Route path="/profile" element={<div className="p-4">My Profile Page</div>} />
-        <Route path="/bookings" element={<div className="p-4">My Bookings Page</div>} />
+        <Route path="/bookings" element={<MyBookings />} />
         <Route path="/provider" element={<ProviderDashboard />} />
         <Route path="/provider/services" element={<ProviderDashboard />} />
         <Route path="/provider/services/add" element={<AddServicePage />} />
