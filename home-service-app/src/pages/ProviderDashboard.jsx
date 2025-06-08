@@ -1,9 +1,9 @@
 // src/pages/ProviderDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import ProviderNavbar from '../components/ProviderNavbar';
-import CategoryCard from '../components/CategoryCard';
 import ProviderServiceCard from '../components/ProviderServiceCard';
 import AddNewServiceCard from '../components/AddNewServiceCard';
+import ProviderCategoryCard from '../components/ProviderCategoryCard';
 import { services as dummyCategories } from '../data';
 
 const ProviderDashboard = () => {
@@ -75,7 +75,7 @@ const ProviderDashboard = () => {
         {/* Categories Section */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
           {dummyCategories.map((category, i) => (
-            <CategoryCard key={i} category={category} />
+            <ProviderCategoryCard key={i} category={category} />
           ))}
         </div>
 

@@ -20,7 +20,7 @@ const ProviderServiceCard = ({ service }) => {
         <h3 className="text-lg font-bold">{service.name}</h3>
         <p className="text-sm text-gray-600">{service.description}</p>
         <p className="text-sm text-gray-500">{service.location}</p>
-        <p className="mt-2 text-purple-600 font-bold">${service.price}</p>
+        <p className="mt-2 text-purple-600 font-bold">Rs.{service.price}</p>
         <p className="text-sm text-gray-500">{service.duration_minutes} minutes</p>
       </div>
     </div>

@@ -11,6 +11,9 @@ import AddServicePage from './pages/AddServicePage';
 import ServiceFormWrapper from './components/ServiceFormWrapper';
 import ProviderServiceFormPage from './pages/ProviderServiceFormPage';
 import MyBookings from './pages/MyBookings';
+import ProviderBookings from './pages/ProviderBookings';
+import ProviderCategory from './pages/ProviderCategory';
+import ProviderAllServices from './pages/ProviderAllServices';
 const App = () => {
   return (
     <Router>
@@ -24,9 +27,12 @@ const App = () => {
         <Route path="/bookings" element={<MyBookings />} />
         <Route path="/provider" element={<ProviderDashboard />} />
         <Route path="/provider/services" element={<ProviderDashboard />} />
+        <Route path="/provider/category/:name" element={<ProviderCategory />} />
         <Route path="/provider/services/add" element={<AddServicePage />} />
         <Route path="/provider/services/:serviceId/edit" element={<ServiceFormWrapper />} />
         <Route path="/provider/add-service" element={<ProviderServiceFormPage />} />
+        <Route path="/provider/bookings" element={<ProviderBookings />} />
+        <Route path="/provider/servicess" element={<ProviderAllServices />} />
       </Routes>
     </Router>
   );

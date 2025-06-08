@@ -2,8 +2,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import Booking, Feedback
-from .serializers import BookingSerializer
+from .models import Booking, Feedback 
+from services.models import ServiceProvider
+from .serializers import BookingSerializer , FeedbackSerializer , ProviderBookingSerializer
 from Booking.utils import evaluate_provider_ban
 from rest_framework.exceptions import ValidationError
 
@@ -39,6 +40,9 @@ class UserBookingsListView(generics.ListAPIView):
         return Booking.objects.filter(user=self.request.user).order_by('-created_at')
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 class SubmitFeedbackView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -49,24 +53,37 @@ class SubmitFeedbackView(APIView):
             return Response({'error': 'Booking not found.'}, status=404)
 
         if booking.status != 'booked':
-            return Response({'error': 'Only booked services can be reviewed.'}, status=400)
+            return Response({'error': 'Booking already completed or cancelled.'}, status=400)
 
+        if Feedback.objects.filter(booking=booking).exists():
+            return Response({'error': 'Feedback already submitted.'}, status=400)
+
+        rating = request.data.get('rating')
         try:
-            rating = int(request.data.get('rating'))
-            comment = request.data.get('comment')
-        except (ValueError, TypeError):
-            return Response({'error': 'Invalid rating or comment.'}, status=400)
+            rating = int(rating)
+        except (TypeError, ValueError):
+            return Response({'rating': 'Invalid or missing.'}, status=400)
+
+        comment = request.data.get('comment', '')
+
+        if not (1 <= rating <= 5):
+            return Response({'rating': 'Must be between 1 and 5.'}, status=400)
 
         Feedback.objects.create(booking=booking, rating=rating, comment=comment)
         booking.status = 'completed'
         booking.save()
 
-        provider = booking.service.provider
-        evaluate_provider_ban(provider)
+        provider = getattr(booking.service, 'provider', None)
+        if provider:
+            try:
+                evaluate_provider_ban(provider)
+            except Exception:
+                pass  # Log as needed
 
-        return Response({'message': 'Feedback submitted and booking marked as completed.'}, status=201)
+        return Response({'message': 'Feedback submitted successfully.'}, status=201)
 
 
+    
 class CancelBookingView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -80,3 +97,19 @@ class CancelBookingView(APIView):
         booking.save()
         # Optionally: store `reason` separately if needed
         return Response({'message': 'Booking cancelled successfully.'}, status=200)
+
+
+class ProviderBookingsListView(generics.ListAPIView):
+    serializer_class = ProviderBookingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Get the service provider object linked to logged-in user
+        try:
+            provider = self.request.user.serviceprovider
+        except ServiceProvider.DoesNotExist:
+            return Booking.objects.none()
+
+        # Return bookings where the booking's service belongs to this provider
+        return Booking.objects.filter(service__provider=provider).order_by('-created_at')
+
